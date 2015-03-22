@@ -2,10 +2,11 @@ var FilterableProductTable = React.createClass({
   getInitialState: function() {
     return {
       products: [],
-      filterText: 'ball',
+      filterText: '',
       inStockOnly: false
     };
   },
+
   componentDidMount: function() {
     $.ajax({
       url: this.props.url,
@@ -18,12 +19,21 @@ var FilterableProductTable = React.createClass({
       }.bind(this)
     });
   },
+
+  handleUserInput: function(filterText, inStockOnly) {
+    this.setState({
+      filterText: filterText,
+      inStockOnly: inStockOnly
+    });
+  },
+
   render: function() {
     return (
       <div>
         <SearchBar
           filterText={this.state.filterText}
           inStockOnly={this.state.inStockOnly}
+          onUserInput={this.handleUserInput}
         />
         <ProductTable
           products={this.state.products}
@@ -36,12 +46,29 @@ var FilterableProductTable = React.createClass({
 });
 
 var SearchBar = React.createClass({
+  handleChange: function() {
+    this.props.onUserInput(
+      this.refs.filterTextInput.getDOMNode().value,
+      this.refs.inStockOnlyInput.getDOMNode().checked
+    );
+  },
   render: function() {
     return (
       <form>
-        <input type="text" placeholder="Search..." value={this.props.filterText} />
+        <input
+          type="text"
+          placeholder="Search..."
+          value={this.props.filterText}
+          ref="filterTextInput"
+          onChange={this.handleChange}
+        />
         <p>
-          <input type="checkbox" checked={this.props.inStockOnly} />
+          <input
+            type="checkbox"
+            checked={this.props.inStockOnly}
+            ref="inStockOnlyInput"
+            onChange={this.handleChange}
+          />
           <small> Only show products in stock</small>
         </p>
       </form>
@@ -63,9 +90,9 @@ var ProductTable = React.createClass({
     });
 
     for (var category in productsByCategory) {
-      rows.push(<ProductCategoryRow name={category} />);
+      rows.push(<ProductCategoryRow category={category} key={category} />);
       productsByCategory[category].forEach(function(product) {
-        rows.push(<ProductRow product={product} />);
+        rows.push(<ProductRow product={product} key={product.name} />);
       });
     }
 
@@ -89,7 +116,7 @@ var ProductCategoryRow = React.createClass({
   render: function() {
     return (
       <tr>
-        <th colSpan="2">{this.props.name}</th>
+        <th colSpan="2">{this.props.category}</th>
       </tr>
     );
   }
